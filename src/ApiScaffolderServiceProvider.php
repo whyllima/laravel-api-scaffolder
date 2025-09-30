@@ -10,11 +10,6 @@ use Whyl\ApiScaffolder\Commands\MakeServiceCommand;
 
 class ApiScaffolderServiceProvider extends ServiceProvider
 {
-    /**
-     * Bootstrap any application services.
-     *
-     * @return void
-     */
     public function boot()
     {
         if ($this->app->runningInConsole()) {
@@ -27,16 +22,11 @@ class ApiScaffolderServiceProvider extends ServiceProvider
         }
 
         $this->publishes([
-            __DIR__.'/stubs/repository.stub' => $this->app->basePath('stubs/repository.stub'),
-            __DIR__.'/stubs/service.stub' => $this->app->basePath('stubs/service.stub'),
+            __DIR__ . '/stubs/repository.stub' => $this->app->basePath('stubs/repository.stub'),
+            __DIR__ . '/stubs/service.stub' => $this->app->basePath('stubs/service.stub'),
         ], 'stubs');
     }
 
-    /**
-     * Register any application services.
-     *
-     * @return void
-     */
     public function register()
     {
         //
