@@ -14,13 +14,6 @@
       "Whyl\\\\ApiScaffolder\\\\": "src/"
     }
   },
-  "extra": {
-    "laravel": {
-      "providers": [
-        "Whyl\\\\ApiScaffolder\\\\ApiScaffolderServiceProvider"
-      ]
-    }
-  },
   "minimum-stability": "dev",
   "prefer-stable": true
 }
