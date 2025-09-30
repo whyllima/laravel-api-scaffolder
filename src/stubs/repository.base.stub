@@ -1,0 +1,112 @@
+<?php
+
+namespace App\Http\Repositories;
+
+use Exception;
+use Illuminate\Support\Facades\Log;
+
+class Repository
+{
+    protected $model;
+
+    public function index(object $model)
+    {
+        try {
+            $perPage = request('per_page', 10);
+            return $model->orderBy('created_at', 'desc')->paginate($perPage);
+        } catch (Exception $e) {
+            Log::info('---- CoreRepository:index ----');
+            Log::error($e->getMessage());
+            throw $e;
+        }
+    }
+
+    public function show(object $model)
+    {
+        try {
+            return $model;
+        } catch (Exception $e) {
+            Log::info('---- CoreRepository:show ----');
+            Log::error($e->getMessage());
+            throw $e;
+        }
+    }
+
+    public function store(object $model)
+    {
+        try {
+            $model->save();
+            return $model;
+        } catch (Exception $e) {
+            Log::info('---- CoreRepository:store ----');
+            Log::error($e->getMessage());
+            throw $e;
+        }
+    }
+
+    public function update(object $model, object $newData)
+    {
+        try {
+            $model->update($newData->getAttributes());
+            return $model;
+        } catch (Exception $e) {
+            Log::info('---- CoreRepository:update ----');
+            Log::error($e->getMessage());
+            throw $e;
+        }
+    }
+
+    public function updateOrCreate(array $key, object $model, object $newData)
+    {
+        try {
+            return $model::updateOrCreate($key, $newData->getAttributes());
+        } catch (Exception $e) {
+            Log::info('---- CoreRepository:updateOrCreate ----');
+            Log::channel("repositories")->error($e->getMessage());
+            throw $e;
+        }
+    }
+
+    public function destroy(object $model)
+    {
+        try {
+            $model->delete();
+            return $model;
+        } catch (Exception $e) {
+            Log::info('---- CoreRepository:destroy ----');
+            Log::error($e->getMessage());
+            throw $e;
+        }
+    }
+
+    public function findByName(object $model, string $modelName)
+    {
+        try {
+            return $model->where('name', $modelName)->first();
+        } catch (Exception $e) {
+            Log::info('---- CoreRepository:findByName ----');
+            Log::error($e->getMessage());
+            throw $e;
+        }
+    }
+
+    public function getAll()
+    {
+        return $this->model->all();
+    }
+
+    public function findByUuid(string $uuid)
+    {
+        return $this->model->findOrFail($uuid);
+    }
+
+    public function findByField(string $field, $value)
+    {
+        return $this->model->where($field, $value)->get();
+    }
+
+    public function create(array $data)
+    {
+        return $this->model->create($data);
+    }
+}

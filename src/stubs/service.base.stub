@@ -1,0 +1,92 @@
+<?php
+
+namespace App\Http\Services;
+
+use Exception;
+use Illuminate\Support\Facades\Log;
+use App\Http\Resources\ResourceCollection as CoreCollection;
+use App\Http\Resources\Resource as ResourcesCore;
+use App\Http\Resources\ErrorResource as CoreErrorResource;
+
+class Service
+{
+    protected $model;
+    protected $repository;
+
+    public function index()
+    {
+        try {
+            return new CoreCollection($this->repository->index($this->model));
+        } catch (Exception $e) {
+            Log::info('---- CoreService:index ----');
+            Log::error($e->getMessage());
+            return new CoreErrorResource($this->model);
+        }
+    }
+
+    public function show(object $model)
+    {
+        try {
+            return new ResourcesCore($this->repository->show($model));
+        } catch (Exception $e) {
+            Log::info('---- CoreService:show ----');
+            Log::error($e->getMessage());
+            return new CoreErrorResource($this->model);
+        }
+    }
+
+    public function store(object $model)
+    {
+        try {
+            return new ResourcesCore($this->repository->store($model));
+        } catch (Exception $e) {
+            Log::info('---- CoreService:store ----');
+            Log::error($e->getMessage());
+            return new CoreErrorResource($this->model);
+        }
+    }
+
+    public function update(object $model, object $newData)
+    {
+        try {
+            return new ResourcesCore($this->repository->update($model, $newData));
+        } catch (Exception $e) {
+            Log::info('---- CoreService:update ----');
+            Log::error($e->getMessage());
+            return new CoreErrorResource($this->model);
+        }
+    }
+
+    public function updateOrCreate(array $key, object $newData)
+    {
+        try {
+            return new ResourcesCore($this->repository->updateOrCreate($key, $this->model, $newData));
+        } catch (Exception $e) {
+            Log::info('---- CoreService:updateOrCreate ----');
+            Log::error($e->getMessage());
+            return new CoreErrorResource($this->model);
+        }
+    }
+
+    public function destroy(object $model)
+    {
+        try {
+            return new ResourcesCore($this->repository->destroy($model));
+        } catch (Exception $e) {
+            Log::info('---- CoreService:destroy ----');
+            Log::error($e->getMessage());
+            return new CoreErrorResource($this->model);
+        }
+    }
+
+    public function findByName(string $modelName)
+    {
+        try {
+            return $this->repository->findByName($this->model, $modelName);
+        } catch (Exception $e) {
+            Log::info('---- CoreService:findByName ----');
+            Log::error($e->getMessage());
+            return new CoreErrorResource($this->model);
+        }
+    }
+}

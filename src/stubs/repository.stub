@@ -1,0 +1,16 @@
+<?php
+
+namespace {{ namespace }};
+
+use App\Http\Repositories\Repository;
+use App\Models\{{ model }};
+
+class {{ class }} extends Repository
+{
+    protected $model;
+
+    public function __construct()
+    {
+        $this->model = new {{ model }}();
+    }
+}
