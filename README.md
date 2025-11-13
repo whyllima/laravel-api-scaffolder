@@ -1,6 +1,6 @@
 # whyl/laravel-api-scaffolder
 
-Um pacote Laravel que fornece comandos Artisan para gerar classes de Service e Repository, seguindo uma estrutura de API padrão, e também comandos para instalar as classes base de Service e Repository.
+Um pacote Laravel que fornece comandos Artisan para gerar classes de Service, Repository e Resources, seguindo uma estrutura de API padrão com filtros genéricos e respostas padronizadas.
 
 ## 🚀 Quick Start
 
@@ -8,17 +8,17 @@ Um pacote Laravel que fornece comandos Artisan para gerar classes de Service e R
 # 1. Instalar o pacote
 composer require whyl/laravel-api-scaffolder:dev-main
 
-# 2. Registrar o Service Provider (veja instruções detalhadas abaixo)
-
-# 3. Instalar todos os componentes
+# 2. Instalar todos os componentes (o Laravel auto-descobre o pacote!)
 php artisan scaffolder:install
 
-# 4. Criar seu primeiro Repository e Service
+# 3. Criar seu primeiro Repository e Service
 php artisan make:repository UserRepository
 php artisan make:service UserService
 ```
 
 Pronto! Seu scaffolding de API está configurado com filtros genéricos e respostas padronizadas. ✨
+
+**Nota:** O pacote usa auto-discovery do Laravel, não sendo necessário registrar manualmente o ServiceProvider.
 
 ## Funcionalidades
 
@@ -64,22 +64,9 @@ Agora você pode requerer o pacote usando o Composer. Como ele está em desenvol
 composer require whyl/laravel-api-scaffolder:dev-main
 ```
 
-### 3. Registrar o Service Provider (Passo Manual Essencial)
+### 3. Instalar Todos os Componentes (Recomendado)
 
-Devido a conflitos de auto-descoberta, a auto-descoberta de pacotes para este pacote está desabilitada. Você precisará registrar manualmente o Service Provider do pacote no seu projeto.
-
-Abra o arquivo `bootstrap/providers.php` e adicione a classe do Service Provider ao array de retorno:
-
-```php
-// bootstrap/providers.php
-
-return [
-    App\Providers\AppServiceProvider::class,
-    Whyl\ApiScaffolder\ApiScaffolderServiceProvider::class, // Adicione esta linha
-];
-```
-
-### 4. Instalar Todos os Componentes (Recomendado)
+O pacote usa **auto-discovery do Laravel**, então após instalar via Composer, os comandos já estarão disponíveis automaticamente.
 
 Execute o comando de instalação único que configura tudo automaticamente:
 
@@ -267,6 +254,66 @@ php artisan vendor:publish --tag=stubs
 
 Isso copiará os stubs para o diretório `stubs/` na raiz do seu projeto Laravel, onde você poderá modificá-los.
 
+## 🔧 Troubleshooting
+
+### Comandos não encontrados após instalação
+
+Se após instalar o pacote os comandos não estiverem disponíveis, siga estes passos:
+
+**1. Limpar caches:**
+```bash
+composer dump-autoload
+php artisan optimize:clear
+```
+
+**2. Verificar se o pacote foi instalado:**
+```bash
+composer show whyl/laravel-api-scaffolder
+```
+
+**3. Laravel 12 - Registrar manualmente (se necessário):**
+
+Se o auto-discovery não funcionar, adicione ao `bootstrap/app.php`:
+
+```php
+<?php
+
+use Illuminate\Foundation\Application;
+use Illuminate\Foundation\Configuration\Exceptions;
+use Illuminate\Foundation\Configuration\Middleware;
+
+return Application::configure(basePath: dirname(__DIR__))
+    ->withRouting(
+        web: __DIR__.'/../routes/web.php',
+        api: __DIR__.'/../routes/api.php',
+        commands: __DIR__.'/../routes/console.php',
+        channels: __DIR__.'/../routes/channels.php',
+        health: '/up',
+    )
+    ->withMiddleware(function (Middleware $middleware): void {
+        //
+    })
+    ->withProviders([
+        Whyl\ApiScaffolder\ApiScaffolderServiceProvider::class,
+    ])
+    ->withExceptions(function (Exceptions $exceptions): void {
+        //
+    })->create();
+```
+
+**4. Verificar comandos disponíveis:**
+```bash
+php artisan list | grep -E "(scaffolder|repository|service)"
+```
+
+Você deve ver:
+- `scaffolder:install`
+- `repository:install`
+- `service:install`
+- `resource:install`
+- `make:repository`
+- `make:service`
+
 ## 📖 Exemplo Completo de Uso
 
 Aqui está um exemplo completo de como usar o pacote em um projeto Laravel:
@@ -274,7 +321,10 @@ Aqui está um exemplo completo de como usar o pacote em um projeto Laravel:
 ### 1. Instalar e Configurar
 
 ```bash
+# Instalar o pacote
 composer require whyl/laravel-api-scaffolder:dev-main
+
+# Instalar os componentes base (Repository, Service, Resources)
 php artisan scaffolder:install
 ```
 
@@ -430,10 +480,82 @@ Resposta de erro (404):
 }
 ```
 
-## Contribuição
+## ✨ Principais Funcionalidades
+
+### 🔍 Filtros Genéricos Automáticos
+- Paginação configurável
+- Filtros por qualquer campo do modelo
+- Range de datas (created_at, updated_at)
+- Ordenação flexível (recent, oldest, custom)
+
+### 📦 Resources Padronizados
+- Respostas de sucesso formatadas
+- Tratamento de erros contextualizado
+- Coleções com paginação automática
+
+### 🚀 Geração Rápida de Código
+- Repository com filtros prontos
+- Service com CRUD completo
+- Resources para API RESTful
+
+### 🎯 Compatibilidade
+- Laravel 11.x e 12.x
+- PHP 8.1+ e 8.2+
+- Auto-discovery habilitado
+
+## 📊 Estrutura de Resposta da API
+
+Todas as respostas da API seguem um padrão consistente:
+
+**Sucesso (200 OK):**
+```json
+{
+  "status": "success",
+  "table_name": { /* dados */ }
+}
+```
+
+**Coleção (200 OK):**
+```json
+{
+  "status": "success",
+  "data": [ /* itens */ ],
+  "meta": { /* paginação */ },
+  "links": { /* navegação */ }
+}
+```
+
+**Erro (404 Not Found):**
+```json
+{
+  "status": "error",
+  "message": "An error occurred while [action] the [table]"
+}
+```
+
+## 🤝 Contribuição
 
 Contribuições são bem-vindas! Sinta-se à vontade para abrir issues ou pull requests no repositório do GitHub.
 
-## Licença
+1. Fork o projeto
+2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
+3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
+4. Push para a branch (`git push origin feature/AmazingFeature`)
+5. Abra um Pull Request
+
+## 📝 Changelog
+
+### v1.0.0 (Atual)
+- ✅ Comando único de instalação (`scaffolder:install`)
+- ✅ Filtros genéricos no Repository base
+- ✅ Resources padronizados (Resource, ErrorResource, ResourceCollection)
+- ✅ Auto-discovery do Laravel
+- ✅ Suporte para Laravel 11 e 12
+
+## 📄 Licença
 
 Este pacote é open-source e licenciado sob a [MIT License](LICENSE.md).
+
+---
+
+Desenvolvido com ❤️ por [Whylgher Lima](https://github.com/whyllima)
