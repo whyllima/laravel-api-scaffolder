@@ -4,10 +4,10 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Resources\Json\ResourceCollection;
+use Illuminate\Http\Resources\Json\ResourceCollection as BaseResourceCollection;
 use Symfony\Component\HttpFoundation\Response;
 
-class ResourceCollection extends ResourceCollection
+class ResourceCollection extends BaseResourceCollection
 {
     /**
      * Transform the resource collection into an array.
