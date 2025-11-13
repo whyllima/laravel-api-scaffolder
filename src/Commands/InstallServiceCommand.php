@@ -12,7 +12,7 @@ class InstallServiceCommand extends Command
 
     public function handle()
     {
-        $path = app_path('Http/Services');
+        $path = app_path('Services');
         $file = $path . '/Service.php';
 
         if (!File::isDirectory($path)) {

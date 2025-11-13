@@ -12,7 +12,7 @@ class InstallRepositoryCommand extends Command
 
     public function handle()
     {
-        $path = app_path('Http/Repositories');
+        $path = app_path('Repositories');
         $file = $path . '/Repository.php';
 
         if (!File::isDirectory($path)) {

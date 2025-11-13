@@ -2,7 +2,7 @@
 
 namespace {{ namespace }};
 
-use App\Http\Repositories\Repository;
+use App\Repositories\Repository;
 use App\Models\{{ model }};
 
 class {{ class }} extends Repository

@@ -1,0 +1,75 @@
+<?php
+
+namespace App\Http\Resources;
+
+use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Resources\Json\JsonResource;
+use Symfony\Component\HttpFoundation\Response;
+
+class ErrorResource extends JsonResource
+{
+    /**
+     * Transform the resource into an array.
+     *
+     * @return array<string, mixed>
+     */
+    public function toArray(Request $request): array
+    {
+        return [];
+    }
+
+    /**
+     * Customize the outgoing response for the resource.
+     *
+     * @param Request $request
+     * @param JsonResponse $response
+     * @return void
+     */
+    public function withResponse(Request $request, JsonResponse $response): void
+    {
+        $method = $request->getMethod();
+        $action = '';
+
+        switch ($method) {
+            case 'GET':
+                $action = 'searching';
+                break;
+            case 'POST':
+                $action = 'creating';
+                break;
+            case 'PUT':
+                $action = 'updating';
+                break;
+            case 'DELETE':
+                $action = 'destroying';
+                break;
+        }
+
+        if ($this->getTable()) {
+            $message = "An error occurred while $action the {$this->getTable()}";
+        } else {
+            $message = "An error occurred while $action";
+        }
+
+        $response->setStatusCode(Response::HTTP_NOT_FOUND);
+        $response->setData([
+            "status" => "error",
+            "message" => $message
+        ]);
+    }
+
+    /**
+     * Get the table name from the resource model
+     *
+     * @return string|null
+     */
+    protected function getTable(): ?string
+    {
+        if ($this->resource && method_exists($this->resource, 'getTable')) {
+            return $this->resource->getTable();
+        }
+        return null;
+    }
+}
+

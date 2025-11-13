@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Repositories;
+namespace App\Repositories;
 
 use Exception;
 use Illuminate\Support\Facades\Log;
@@ -12,8 +12,22 @@ class Repository
     public function index(object $model)
     {
         try {
-            $perPage = request('per_page', 10);
-            return $model->orderBy('created_at', 'desc')->paginate($perPage);
+            $filters = request()->query();
+            $query = is_object($model) ? $model : $model::query();
+
+            // Apply generic filters
+            $this->applyFilters($query, $filters);
+
+            // Apply date range filter
+            $this->applyDateRangeFilter($query, $filters);
+
+            // Apply sorting
+            $this->applySorting($query, $filters);
+
+            // Pagination
+            $perPage = isset($filters['per_page']) ? (int) $filters['per_page'] : 10;
+
+            return $query->paginate($perPage);
         } catch (Exception $e) {
             Log::info('---- CoreRepository:index ----');
             Log::error($e->getMessage());
@@ -108,5 +122,118 @@ class Repository
     public function create(array $data)
     {
         return $this->model->create($data);
+    }
+
+    /**
+     * Apply generic filters to the query
+     *
+     * @param mixed $query
+     * @param array $filters
+     * @return void
+     */
+    protected function applyFilters($query, array $filters)
+    {
+        // Skip pagination and sorting parameters
+        $excludedParams = ['per_page', 'page', 'sort', 'created_at', 'updated_at'];
+
+        foreach ($filters as $key => $value) {
+            if (in_array($key, $excludedParams) || empty($value)) {
+                continue;
+            }
+
+            // Simple equality filter
+            if (is_string($value) || is_numeric($value)) {
+                $query->where($key, $value);
+            }
+
+            // Array filter (whereIn)
+            if (is_array($value)) {
+                $query->whereIn($key, $value);
+            }
+        }
+    }
+
+    /**
+     * Apply date range filter to the query
+     *
+     * @param mixed $query
+     * @param array $filters
+     * @return void
+     */
+    protected function applyDateRangeFilter($query, array $filters)
+    {
+        // Filter by created_at range
+        if (!empty($filters['created_at'])) {
+            $this->applyDateRange($query, 'created_at', $filters['created_at']);
+        }
+
+        // Filter by updated_at range
+        if (!empty($filters['updated_at'])) {
+            $this->applyDateRange($query, 'updated_at', $filters['updated_at']);
+        }
+    }
+
+    /**
+     * Apply date range to a specific field
+     *
+     * @param mixed $query
+     * @param string $field
+     * @param string $dateRange
+     * @return void
+     */
+    protected function applyDateRange($query, string $field, string $dateRange)
+    {
+        $dateRange = explode(',', $dateRange);
+
+        if (count($dateRange) == 2) {
+            $startDate = \DateTime::createFromFormat('d/m/Y', trim($dateRange[0]));
+            $endDate = \DateTime::createFromFormat('d/m/Y', trim($dateRange[1]));
+
+            if ($startDate && $endDate) {
+                $startDateFormatted = $startDate->format('Y-m-d 00:00:00');
+                $endDateFormatted = $endDate->format('Y-m-d 23:59:59');
+
+                $query->whereBetween($field, [$startDateFormatted, $endDateFormatted]);
+            }
+        }
+    }
+
+    /**
+     * Apply sorting to the query
+     *
+     * @param mixed $query
+     * @param array $filters
+     * @return void
+     */
+    protected function applySorting($query, array $filters)
+    {
+        if (!empty($filters['sort'])) {
+            switch ($filters['sort']) {
+                case 'recent':
+                    $query->orderBy('created_at', 'desc');
+                    break;
+                case 'oldest':
+                    $query->orderBy('created_at', 'asc');
+                    break;
+                case 'name_asc':
+                    $query->orderBy('name', 'asc');
+                    break;
+                case 'name_desc':
+                    $query->orderBy('name', 'desc');
+                    break;
+                default:
+                    // Allow custom sorting like "field:direction"
+                    if (strpos($filters['sort'], ':') !== false) {
+                        list($field, $direction) = explode(':', $filters['sort']);
+                        $direction = in_array(strtolower($direction), ['asc', 'desc']) ? $direction : 'asc';
+                        $query->orderBy($field, $direction);
+                    } else {
+                        $query->orderBy('created_at', 'desc');
+                    }
+                    break;
+            }
+        } else {
+            $query->orderBy('created_at', 'desc');
+        }
     }
 }
